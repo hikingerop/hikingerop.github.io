@@ -1,12 +1,12 @@
 #!/bin/bash
 # Пробный запуск VPN на сервере Merida в отдельной копии Xray (порт 14443, только для этого сервера).
 # Перебирает сайты-маскировки и показывает, какой работает. Рабочий VPN не трогает.
-# Запуск: curl -fsSL https://hikingerop.github.io/dl/test.sh | bash
+# Запуск: curl -fsSL https://hikingerop.github.io/dl/test.sh | bash [-s -- сайт1 сайт2 …]
 
 XRAY=$(ls /usr/local/x-ui/bin/xray-linux-* 2>/dev/null | head -1)
 INBOUND_ID=$(grep -s '^INBOUND_ID=' /opt/vpn-bot/.env | cut -d= -f2)
 
-python3 - "$XRAY" "${INBOUND_ID:-1}" <<'PY'
+python3 - "$XRAY" "${INBOUND_ID:-1}" "$@" <<'PY'
 import json, os, sqlite3, subprocess, sys, tempfile, time
 
 xray, inbound_id = sys.argv[1], int(sys.argv[2])
@@ -69,9 +69,10 @@ def attempt(site: str, fingerprint: str) -> tuple[bool, str, str]:
 
 print("Xray:", subprocess.run([xray, "version"], capture_output=True, text=True).stdout.splitlines()[0])
 first = True
-for site, fingerprint in (("www.microsoft.com", "chrome"), ("www.microsoft.com", "firefox"),
-                          ("dl.google.com", "chrome"), ("www.apple.com", "chrome"),
-                          ("www.samsung.com", "chrome")):
+sites = [(s, "chrome") for s in sys.argv[3:]] or [
+    ("www.microsoft.com", "chrome"), ("www.microsoft.com", "firefox"),
+    ("dl.google.com", "chrome"), ("www.apple.com", "chrome"), ("www.samsung.com", "chrome")]
+for site, fingerprint in sites:
     ok, server_log, user_log = attempt(site, fingerprint)
     print(f"{'✅' if ok else '❌'} {site} / {fingerprint}")
     if not ok and first:
