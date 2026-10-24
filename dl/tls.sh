@@ -9,7 +9,7 @@ cp /etc/x-ui/x-ui.db "/etc/x-ui/x-ui.db.bak-$(date +%s)"  # копия на вс
 
 echo "→ Обновляю код бота…"
 cd /opt/vpn-bot
-curl -fsSL https://hikingerop.github.io/dl/merida-bot.tar.gz | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/merida-bot.tar.gz?$(date +%s)" | tar xz
 
 x-ui stop > /dev/null
 python3 - "$MODE" "${INBOUND_ID:-1}" <<'PY'

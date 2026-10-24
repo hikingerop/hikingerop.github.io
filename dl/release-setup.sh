@@ -10,7 +10,7 @@ apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq apksigner > /dev/null
 
 echo "→ Обновляю код бота…"
-curl -fsSL https://hikingerop.github.io/dl/merida-bot.tar.gz | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/merida-bot.tar.gz?$(date +%s)" | tar xz
 venv/bin/pip install -q -r requirements.txt
 
 if [ ! -f release.p12 ]; then

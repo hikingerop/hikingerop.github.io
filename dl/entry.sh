@@ -6,7 +6,7 @@ ENTRY=${1:?Укажите IP входного сервера}
 cd /opt/vpn-bot
 
 echo "→ Обновляю код бота…"
-curl -fsSL https://hikingerop.github.io/dl/merida-bot.tar.gz | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/merida-bot.tar.gz?$(date +%s)" | tar xz
 venv/bin/pip install -q -r requirements.txt
 
 set_env() {
