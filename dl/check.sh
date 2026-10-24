@@ -111,7 +111,8 @@ echo
 echo "== Маскировка =="
 echo "кто на 443: $(ss -tlnp | awk '$4 ~ /:443$/ {print $6}')"
 echo "microsoft с сервера: $(curl -s -o /dev/null -m 8 -w '%{http_code}' https://www.microsoft.com)  по IPv6: $(curl -6 -s -o /dev/null -m 5 -w '%{http_code}' https://www.microsoft.com)"
-echo "TLS через 443: $(timeout 8 openssl s_client -connect 127.0.0.1:443 -servername www.microsoft.com < /dev/null 2>&1 | grep -m1 -E 'subject=|errno|error|Connection refused|CONNECTED' )"
+echo "TLS через 443: $(timeout 8 openssl s_client -connect 127.0.0.1:443 -servername www.microsoft.com < /dev/null 2>&1 | grep -m1 -E 'subject=|errno|refused|alert' || echo 'сертификата нет')"
+echo "IPv6 на сервере: $(ip -6 route show default 2> /dev/null | head -1)$( [ "$(sysctl -n net.ipv6.conf.all.disable_ipv6 2> /dev/null)" = 1 ] && echo выключен)"
 for f in /usr/local/x-ui/*.log /usr/local/x-ui/bin/*.log; do [ -s "$f" ] && echo "-- $f" && tail -4 "$f"; done
 
 echo
