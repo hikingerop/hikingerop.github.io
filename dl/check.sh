@@ -12,10 +12,10 @@ XRAY=$(ls /usr/local/x-ui/bin/xray-linux-* 2>/dev/null | head -1)
 INBOUND_ID=$(grep -s '^INBOUND_ID=' /opt/vpn-bot/.env | cut -d= -f2)
 HOST=$(grep -s '^SERVER_HOST=' /opt/vpn-bot/.env | cut -d= -f2)
 
-python3 - "${INBOUND_ID:-1}" "${HOST:-127.0.0.1}" > /tmp/merida-check.json <<'PY'
-import json, sqlite3, sys, time
+python3 - "${INBOUND_ID:-1}" 127.0.0.1 "$XRAY" > /tmp/merida-check.json <<'PY'
+import json, sqlite3, subprocess, sys, time
 
-inbound_id, host = int(sys.argv[1]), sys.argv[2]
+inbound_id, host, xray = int(sys.argv[1]), sys.argv[2], sys.argv[3]
 db = sqlite3.connect("/etc/x-ui/x-ui.db")
 db.row_factory = sqlite3.Row
 row = db.execute("SELECT * FROM inbounds WHERE id = ?", (inbound_id,)).fetchone()
@@ -33,6 +33,25 @@ say("сеть:", stream.get("network"), " защита:", stream.get("security")
 say("сайт-маскировка:", reality.get("target") or reality.get("dest"), " serverNames:", reality.get("serverNames"))
 say("publicKey есть:", bool(extra.get("publicKey")), " privateKey есть:", bool(reality.get("privateKey")),
     " shortIds:", len(reality.get("shortIds") or []))
+if xray and reality.get("privateKey"):
+    out = subprocess.run([xray, "x25519", "-i", reality["privateKey"]], capture_output=True, text=True).stdout
+    derived = next((line.split(":", 1)[1].strip() for line in out.splitlines()
+                    if line.lower().startswith(("public key", "publickey", "password"))), "")
+    say("пара ключей сходится:", (derived == extra.get("publicKey")) if derived else "не проверил")
+try:  # что на самом деле запущено в Xray
+    running = json.load(open("/usr/local/x-ui/bin/config.json"))
+    live = next((i for i in running.get("inbounds", []) if i.get("port") == row["port"]), None)
+    if not live:
+        say("в запущенном Xray НЕТ порта", row["port"])
+    else:
+        live_reality = live.get("streamSettings", {}).get("realitySettings", {})
+        live_ids = {c.get("id") for c in live.get("settings", {}).get("clients", [])}
+        say("в запущенном Xray: клиентов", len(live_ids),
+            " все из панели есть:", all(c["id"] in live_ids for c in settings.get("clients", [])),
+            " ключ тот же:", live_reality.get("privateKey") == reality.get("privateKey"),
+            " shortIds те же:", live_reality.get("shortIds") == reality.get("shortIds"))
+except Exception as e:
+    say("не прочитал запущенный конфиг:", e)
 
 clients = settings.get("clients", [])
 apps = [c for c in clients if str(c.get("email", "")).startswith("app")]
@@ -50,7 +69,7 @@ if traffic:
         " дней осталось:", round(left, 1) if left is not None else "без срока")
 
 print(json.dumps({
-    "log": {"loglevel": "warning"},
+    "log": {"loglevel": "debug"},
     "inbounds": [{"listen": "127.0.0.1", "port": 10808, "protocol": "socks", "settings": {"udp": False}}],
     "outbounds": [{
         "protocol": "vless",
@@ -76,7 +95,7 @@ else
   sleep 3
   CODE=$(curl -s -o /dev/null -m 10 -w '%{http_code}' -x socks5h://127.0.0.1:10808 https://www.google.com/generate_204)
   kill $PID 2> /dev/null
-  if [ "$CODE" = "204" ]; then echo "КЛЮЧ РАБОТАЕТ ✅"; else echo "КЛЮЧ НЕ РАБОТАЕТ ❌ (код $CODE)"; tail -5 /tmp/merida-check.log; fi
+  if [ "$CODE" = "204" ]; then echo "КЛЮЧ РАБОТАЕТ ✅"; else echo "КЛЮЧ НЕ РАБОТАЕТ ❌ (код $CODE)"; grep -vE "accepted|Reading config|A unified|Penetrates" /tmp/merida-check.log | tail -8; fi
 fi
 rm -f /tmp/merida-check.json
 
