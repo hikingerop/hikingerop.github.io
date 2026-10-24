@@ -2,9 +2,11 @@
 # Входной сервер Merida VPN (в России): пересылает подключения на основной сервер.
 #   curl -fsSL https://hikingerop.github.io/dl/relay.sh | bash
 # 443 — VPN, 8443 — сервер приложения, 8080 — страница после оплаты,
-# 2222 — вход в Termius на основной сервер, 2053 — его панель.
+# 2222 — вход в Termius на основной сервер, 2053 — его панель, 8081/8444 — проверка скорости.
 set -euo pipefail
 MAIN=${1:-46.30.46.114}
+# CLAMP=1 — подгонять размер пакетов под сеть телефона (если большие данные «застревают»)
+CLAMP=$([ "${CLAMP:-0}" = 1 ] && echo "tcp flags syn tcp option maxseg size set rt mtu" || echo "")
 
 echo "→ Ставлю nftables…"
 apt-get update -qq
@@ -20,8 +22,12 @@ delete table ip merida
 table ip merida {
   chain prerouting {
     type nat hook prerouting priority dstnat;
-    tcp dport { 443, 8443, 8080, 2053 } dnat to $MAIN
+    tcp dport { 443, 8443, 8080, 2053, 8081, 8444 } dnat to $MAIN
     tcp dport 2222 dnat to $MAIN:22
+  }
+  chain forward {
+    type filter hook forward priority mangle;
+    $CLAMP
   }
   chain postrouting {
     type nat hook postrouting priority srcnat;
