@@ -85,7 +85,10 @@ print(json.dumps({
         "protocol": "vless",
         "settings": {"vnext": [{"address": host, "port": row["port"], "users": [
             {"id": client["id"], "encryption": "none", "flow": client.get("flow", "")}]}]},
-        "streamSettings": {"network": "tcp", "security": "reality", "realitySettings": {
+        "streamSettings": {"network": "tcp", "security": "tls", "tlsSettings": {
+            "allowInsecure": True, "fingerprint": "chrome"}}
+        if stream.get("security") == "tls" else
+        {"network": "tcp", "security": "reality", "realitySettings": {
             "serverName": (reality.get("serverNames") or [""])[0],
             "fingerprint": extra.get("fingerprint") or "chrome",
             "publicKey": extra.get("publicKey", ""),
