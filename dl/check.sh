@@ -12,7 +12,7 @@ XRAY=$(ls /usr/local/x-ui/bin/xray-linux-* 2>/dev/null | head -1)
 INBOUND_ID=$(grep -s '^INBOUND_ID=' /opt/vpn-bot/.env | cut -d= -f2)
 HOST=$(grep -s '^SERVER_HOST=' /opt/vpn-bot/.env | cut -d= -f2)
 
-python3 - "${INBOUND_ID:-1}" 127.0.0.1 "$XRAY" > /tmp/merida-check.json <<'PY'
+python3 - "${INBOUND_ID:-1}" "${CHECK_HOST:-127.0.0.1}" "$XRAY" > /tmp/merida-check.json <<'PY'
 import json, sqlite3, subprocess, sys, time
 
 inbound_id, host, xray = int(sys.argv[1]), sys.argv[2], sys.argv[3]
@@ -75,6 +75,8 @@ if traffic:
     say("  в статистике включён:", bool(traffic["enable"]),
         " потрачено МБ:", round((traffic["up"] + traffic["down"]) / 2**20, 1),
         " дней осталось:", round(left, 1) if left is not None else "без срока")
+for row_t in db.execute("SELECT email, up, down FROM client_traffics ORDER BY email"):
+    say("  трафик", row_t["email"], ": отправлено КБ", row_t["up"] // 1024, " получено КБ", row_t["down"] // 1024)
 
 print(json.dumps({
     "log": {"loglevel": "debug"},
@@ -94,7 +96,7 @@ print(json.dumps({
 PY
 
 echo
-echo "== Проверка ключа (сервер подключается сам к себе) =="
+echo "== Проверка ключа (подключение через ${CHECK_HOST:-127.0.0.1}) =="
 if [ ! -s /tmp/merida-check.json ] || [ -z "$XRAY" ]; then
   echo "не получилось собрать проверку"
 else
