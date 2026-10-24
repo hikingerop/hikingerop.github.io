@@ -53,6 +53,14 @@ try:  # что на самом деле запущено в Xray
 except Exception as e:
     say("не прочитал запущенный конфиг:", e)
 
+def hide(value):  # прячем ключи, остальное показываем как есть
+    if isinstance(value, dict):
+        return {k: ("***" if k in ("privateKey", "publicKey", "shortIds", "mldsa65Seed", "mldsa65Verify", "password")
+                    else hide(v)) for k, v in value.items()}
+    return [hide(v) for v in value] if isinstance(value, list) else value
+say("настройки:", json.dumps(hide(stream), ensure_ascii=False))
+say("listen:", repr(row["listen"]) if "listen" in row.keys() else "?")
+
 clients = settings.get("clients", [])
 apps = [c for c in clients if str(c.get("email", "")).startswith("app")]
 say("клиентов:", len(clients), " из приложения:", len(apps))
@@ -100,6 +108,13 @@ fi
 rm -f /tmp/merida-check.json
 
 echo
+echo "== Маскировка =="
+echo "кто на 443: $(ss -tlnp | awk '$4 ~ /:443$/ {print $6}')"
+echo "microsoft с сервера: $(curl -s -o /dev/null -m 8 -w '%{http_code}' https://www.microsoft.com)  по IPv6: $(curl -6 -s -o /dev/null -m 5 -w '%{http_code}' https://www.microsoft.com)"
+echo "TLS через 443: $(timeout 8 openssl s_client -connect 127.0.0.1:443 -servername www.microsoft.com < /dev/null 2>&1 | grep -m1 -E 'subject=|errno|error|Connection refused|CONNECTED' )"
+for f in /usr/local/x-ui/*.log /usr/local/x-ui/bin/*.log; do [ -s "$f" ] && echo "-- $f" && tail -4 "$f"; done
+
+echo
 echo "== Ошибки Xray =="
-journalctl -u x-ui -n 300 --no-pager 2> /dev/null | grep -iE "error|fail|rejected|invalid" | tail -6
+journalctl -u x-ui --since "-10min" --no-pager 2> /dev/null | grep -iE "error|fail|rejected|invalid|reality" | tail -6
 echo "== Готово =="
