@@ -22,7 +22,7 @@ set_env ADMIN_BOT_TOKEN "$TOKEN"
 echo "→ Админка: @$NAME"
 
 echo "→ Обновляю код бота…"
-curl -fsSL "https://hikingerop.github.io/dl/merida-bot.tar.gz?$(date +%s)" | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/fetch-code.sh?$(date +%s)" | bash
 venv/bin/pip install -q -r requirements.txt
 systemctl restart vpn-bot
 sleep 6

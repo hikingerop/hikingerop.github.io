@@ -8,7 +8,7 @@ PORT=${1:-2443}
 cd /opt/vpn-bot
 
 echo "→ Обновляю код бота…"
-curl -fsSL "https://hikingerop.github.io/dl/merida-bot.tar.gz?$(date +%s)" | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/fetch-code.sh?$(date +%s)" | bash
 venv/bin/pip install -q -r requirements.txt
 
 set_env() {

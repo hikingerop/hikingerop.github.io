@@ -19,7 +19,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3-venv openssl curl 
 echo "→ Скачиваю бота…"
 mkdir -p "$DIR"
 cd "$DIR"
-curl -fsSL "$BASE/merida-bot.tar.gz?$(date +%s)" | tar xz
+curl -fsSL "https://hikingerop.github.io/dl/fetch-code.sh?$(date +%s)" | bash
 python3 -m venv venv
 venv/bin/pip install -q --upgrade pip
 venv/bin/pip install -q -r requirements.txt
