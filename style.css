@@ -81,3 +81,10 @@ footer.req p { margin: 4px 0; }
   nav.links { gap: 12px; font-size: 14px; }
   .btn { width: 100%; }
 }
+
+/* Таблица тарифов: на узком экране прокручивается внутри себя */
+.table { overflow-x: auto; margin: 16px 0 10px; }
+table.prices { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.prices th, .prices td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.prices th { color: var(--sub); font-weight: 600; font-size: 14px; }
+.prices .num { text-align: right; }
