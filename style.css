@@ -48,15 +48,50 @@ h1 span { display: block; color: var(--dim); }
 /* Телефон с приложением: выезжает и увеличивается при прокрутке */
 .stage { display: flex; justify-content: center; padding-block: 24px 40px; }
 .phone { --p: 1; width: min(300px, 76vw); aspect-ratio: 300 / 620; border-radius: 52px; padding: 11px; background: #1D1D1F; box-shadow: 0 50px 90px rgba(0, 0, 0, .18), inset 0 0 0 2px #3A3A3C; transform: translateY(calc((1 - var(--p)) * 70px)) scale(calc(.86 + .14 * var(--p))); will-change: transform; }
-.screen { position: relative; height: 100%; border-radius: 42px; overflow: hidden; background: #F5F6F8; display: flex; flex-direction: column; align-items: center; padding: 34px 18px 18px; color: #0F1115; }
-.screen::before { content: ""; position: absolute; top: 10px; left: 50%; width: 86px; height: 24px; margin-left: -43px; border-radius: 14px; background: #1D1D1F; }
-.screen .st { margin-top: 14px; display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 20px; letter-spacing: -.02em; }
-.screen .st i { width: 9px; height: 9px; border-radius: 50%; background: #1E9E63; box-shadow: 0 0 0 5px rgba(30, 158, 99, .16); }
-.screen .tm { font-size: 12px; color: #5B6270; margin-top: 4px; font-variant-numeric: tabular-nums; }
-.screen img { width: 112%; max-width: none; margin-top: 6px; flex: 1; min-height: 0; object-fit: contain; }
-.screen .srv { width: 100%; display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #E3E6EB; border-radius: 16px; padding: 11px 14px; font-size: 13px; font-weight: 600; }
-.screen .srv small { color: #5B6270; font-weight: 400; }
-.screen .go { width: 100%; margin-top: 10px; text-align: center; background: #0F1115; color: #fff; border-radius: 18px; padding: 13px; font-size: 14px; font-weight: 800; }
+.screen { position: relative; height: 100%; border-radius: 42px; overflow: hidden; background: #F5F6F8; color: #0F1115; display: flex; flex-direction: column; text-align: left; }
+.screen::before { content: ""; position: absolute; z-index: 3; top: 10px; left: 50%; width: 86px; height: 24px; margin-left: -43px; border-radius: 14px; background: #1D1D1F; }
+/* Экран приложения — как настоящий; при прокрутке «подключается»: подключение… → защищено */
+.app-glow { position: absolute; inset: 0 0 auto; height: 46%; pointer-events: none; opacity: 0; transition: opacity 1s var(--ease); background: radial-gradient(ellipse at 50% 0, rgba(76, 195, 138, .34), transparent 70%); }
+.screen.connecting .app-glow { opacity: .55; background: radial-gradient(ellipse at 50% 0, rgba(138, 148, 173, .4), transparent 70%); }
+.screen.on .app-glow { opacity: 1; }
+.app-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 42px 14px 10px; }
+.app-top { display: flex; align-items: center; justify-content: space-between; }
+.app-top b { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+.app-top span { display: flex; gap: 6px; }
+.rb { width: 29px; height: 29px; border-radius: 50%; border: 1px solid #E3E6EB; background: #fff; display: grid; place-items: center; }
+.app svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.rb svg { width: 15px; height: 15px; }
+.app-label { font-size: 8.5px; font-weight: 600; letter-spacing: .14em; color: #5B6270; margin-top: 8px; }
+.app-status { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; }
+.app-sub { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #5B6270; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+.app-sub i { flex: none; width: 6px; height: 6px; border-radius: 50%; background: #E5484D; transition: background .4s; }
+.screen.connecting .app-sub i { width: 8px; height: 8px; background: transparent; border: 1.5px solid #9AA0AC; border-top-color: transparent; animation: spin .8s linear infinite; }
+.screen.on .app-sub i { background: #1E9E63; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.app-globe { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.app-globe .g { position: absolute; top: 50%; left: 50%; height: 100%; aspect-ratio: 1; transform-origin: 48.5% 34.5%; transform: translate(-50%, -50%); transition: transform 1.8s var(--ease); }
+.screen.on .app-globe .g { transform: translate(-50%, -50%) scale(1.9); }
+.app-globe img { width: 100%; height: 100%; }
+.app-globe .nl { position: absolute; left: 48.5%; top: 34.5%; width: 6px; height: 6px; margin: -3px 0 0 -3px; border-radius: 50%; background: #1E9E63; opacity: 0; transition: opacity .6s; }
+.screen.on .app-globe .nl { opacity: 1; transition-delay: 1s; animation: ping 1.8s ease-out 1.4s infinite; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(30, 158, 99, .55); } 100% { box-shadow: 0 0 0 9px rgba(30, 158, 99, 0); } }
+.app-hint { font-size: 9.5px; color: #5B6270; text-align: center; transition: opacity .4s; }
+.screen.on .app-hint, .screen.connecting .app-hint { opacity: 0; }
+.app-srv { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #E3E6EB; border-radius: 999px; padding: 8px 12px; font-size: 12.5px; font-weight: 800; }
+.app-srv .em { font-size: 16px; line-height: 1; }
+.app-srv svg { width: 14px; height: 14px; margin-left: auto; color: #5B6270; }
+.app-line { display: flex; justify-content: space-between; font-size: 11px; color: #5B6270; margin-top: 2px; }
+.app-line u { color: #0F1115; font-weight: 800; text-underline-offset: 2px; }
+.app-bar { height: 2.5px; border-radius: 2px; background: #0F1115; }
+.app-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: 22px; background: #0F1115; color: #fff; font-size: 14px; font-weight: 800; margin-top: 2px; }
+.app-btn svg { width: 16px; height: 16px; stroke-width: 2.2; }
+.screen.on .app-btn svg, .screen.connecting .app-btn svg { display: none; }
+.app-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #E3E6EB; background: #fff; padding: 6px 0 16px; }
+.app-tabs span { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 8.5px; color: #5B6270; font-weight: 400; }
+.app-tabs i { width: 36px; height: 21px; border-radius: 11px; display: grid; place-items: center; }
+.app-tabs svg { width: 16px; height: 16px; }
+.app-tabs .cur { color: #1E9E63; font-weight: 800; }
+.app-tabs .cur i { background: rgba(30, 158, 99, .14); }
 
 /* Фраза, которая загорается слово за словом */
 .words { font-size: clamp(30px, 5.4vw, 60px); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; max-width: 20ch; padding-block: 90px; }
